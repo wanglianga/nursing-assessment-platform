@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
-import { SELF_CARE_ITEMS, COGNITIVE_ITEMS } from '@/utils/constants'
+import { SELF_CARE_ITEMS, COGNITIVE_ITEMS, REASSESSMENT_REASON_LABELS, REASSESSMENT_REASON_COLORS } from '@/utils/constants'
 import { getNursingLevelLabel } from '@/utils/helpers'
 import { useDataStore } from '@/store/dataStore'
 import { useAuthStore } from '@/store/authStore'
-import type { NursingLevel, AssessmentType } from '@/types'
+import type { NursingLevel, AssessmentType, ReassessmentReason } from '@/types'
 
-const STEPS = ['自理能力', '认知状态', '慢病评估', '跌倒风险', '用药情况', '汇总']
+const STEPS_ADMISSION = ['自理能力', '认知状态', '慢病评估', '跌倒风险', '用药情况', '汇总']
+const STEPS_REASSESSMENT = ['复评原因', '自理能力', '认知状态', '慢病评估', '跌倒风险', '用药情况', '汇总']
 
 function getNursingLevel(total: number): NursingLevel {
   if (total >= 120) return 'SPECIAL'
@@ -22,9 +23,18 @@ export default function Assessment() {
   const [searchParams] = useSearchParams()
   const elderId = Number(searchParams.get('elderId'))
   const assessmentType = (searchParams.get('type') || 'ADMISSION') as AssessmentType
+  const reasonParam = searchParams.get('reason') as ReassessmentReason | null
+  const triggerParam = searchParams.get('trigger') || ''
   const { createAssessment } = useDataStore()
   const { user } = useAuthStore()
+
+  const isReassessment = assessmentType === 'REASSESSMENT'
+  const steps = isReassessment ? STEPS_REASSESSMENT : STEPS_ADMISSION
+  const stepOffset = isReassessment ? 1 : 0
+
   const [step, setStep] = useState(0)
+  const [reassessmentReason, setReassessmentReason] = useState<ReassessmentReason | null>(reasonParam || null)
+  const [reassessmentTrigger, setReassessmentTrigger] = useState(triggerParam)
   const [selfCareScores, setSelfCareScores] = useState<number[]>([5, 5, 5, 5, 5, 5])
   const [cognitiveScores, setCognitiveScores] = useState<number[]>([4, 4, 4, 4, 4])
   const [chronicScore, setChronicScore] = useState(0)
@@ -63,6 +73,8 @@ export default function Assessment() {
         medicationScore: medScore,
         totalScore,
         nursingLevel: suggestedLevel,
+        reassessmentReason: isReassessment ? reassessmentReason || undefined : undefined,
+        reassessmentTrigger: isReassessment ? reassessmentTrigger || undefined : undefined,
         notes: [chronicDesc, fallDesc, medDesc].filter(Boolean).join('; '),
       })
       navigate(`/elders/${elderId}`)
@@ -71,12 +83,37 @@ export default function Assessment() {
     }
   }
 
+  const canProceed = () => {
+    if (isReassessment && step === 0) {
+      return reassessmentReason !== null
+    }
+    return true
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h2 className="text-xl font-bold text-slate-800">护理评估</h2>
+      <h2 className="text-xl font-bold text-slate-800">
+        {isReassessment ? '护理等级复评' : '护理评估'}
+      </h2>
 
-      <div className="flex items-center gap-2">
-        {STEPS.map((label, i) => (
+      {isReassessment && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-1">
+            {reassessmentReason && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${REASSESSMENT_REASON_COLORS[reassessmentReason]}`}>
+                {REASSESSMENT_REASON_LABELS[reassessmentReason]}
+              </span>
+            )}
+            <span className="text-xs text-amber-600">复评模式 — 评估后护理计划将分段生效</span>
+          </div>
+          {reassessmentTrigger && (
+            <p className="text-xs text-amber-700 mt-1">触发说明: {reassessmentTrigger}</p>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 flex-wrap">
+        {steps.map((label, i) => (
           <div key={label} className="flex items-center">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
               i < step ? 'bg-green-100 text-green-700' : i === step ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-400'
@@ -84,13 +121,53 @@ export default function Assessment() {
               {i < step ? <Check size={12} /> : <span>{i + 1}</span>}
               <span className="hidden md:inline">{label}</span>
             </div>
-            {i < STEPS.length - 1 && <ChevronRight size={14} className="text-slate-300 mx-1" />}
+            {i < steps.length - 1 && <ChevronRight size={14} className="text-slate-300 mx-1" />}
           </div>
         ))}
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 p-6">
-        {step === 0 && (
+        {isReassessment && step === 0 && (
+          <div className="space-y-5">
+            <h3 className="text-base font-semibold text-slate-800">复评原因</h3>
+            <div className="space-y-3">
+              {(Object.entries(REASSESSMENT_REASON_LABELS) as [ReassessmentReason, string][]).map(([key, label]) => (
+                <label
+                  key={key}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    reassessmentReason === key
+                      ? 'border-primary-500 bg-primary-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="reassessmentReason"
+                    value={key}
+                    checked={reassessmentReason === key}
+                    onChange={(e) => setReassessmentReason(e.target.value as ReassessmentReason)}
+                    className="accent-primary-500"
+                  />
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${REASSESSMENT_REASON_COLORS[key]}`}>
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm text-slate-700 mb-1.5">触发说明</label>
+              <textarea
+                value={reassessmentTrigger}
+                onChange={(e) => setReassessmentTrigger(e.target.value)}
+                rows={3}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                placeholder="请描述触发复评的具体情况..."
+              />
+            </div>
+          </div>
+        )}
+
+        {step === 0 + stepOffset && (
           <div className="space-y-5">
             <h3 className="text-base font-semibold text-slate-800">自理能力评估</h3>
             {SELF_CARE_ITEMS.map((item, i) => (
@@ -120,7 +197,7 @@ export default function Assessment() {
           </div>
         )}
 
-        {step === 1 && (
+        {step === 1 + stepOffset && (
           <div className="space-y-5">
             <h3 className="text-base font-semibold text-slate-800">认知状态评估</h3>
             {COGNITIVE_ITEMS.map((item, i) => (
@@ -150,7 +227,7 @@ export default function Assessment() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 2 + stepOffset && (
           <div className="space-y-5">
             <h3 className="text-base font-semibold text-slate-800">慢病评估</h3>
             <div>
@@ -183,7 +260,7 @@ export default function Assessment() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 3 + stepOffset && (
           <div className="space-y-5">
             <h3 className="text-base font-semibold text-slate-800">跌倒风险评估 (Morse评分)</h3>
             <div>
@@ -216,7 +293,7 @@ export default function Assessment() {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 4 + stepOffset && (
           <div className="space-y-5">
             <h3 className="text-base font-semibold text-slate-800">用药情况评估</h3>
             <div>
@@ -249,9 +326,17 @@ export default function Assessment() {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 5 + stepOffset && (
           <div className="space-y-6">
             <h3 className="text-base font-semibold text-slate-800">评估汇总</h3>
+            {isReassessment && reassessmentReason && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs text-amber-700">
+                  复评原因: <strong>{REASSESSMENT_REASON_LABELS[reassessmentReason]}</strong>
+                  {reassessmentTrigger && <span className="ml-2">— {reassessmentTrigger}</span>}
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-5 gap-3">
               {dimensions.map((dim) => (
                 <div key={dim.label} className="text-center p-3 bg-slate-50 rounded-lg">
@@ -268,6 +353,13 @@ export default function Assessment() {
               <p className="text-3xl font-bold text-primary-700">{totalScore}</p>
               <p className="text-sm text-slate-600 mt-1">建议护理等级: <strong className="text-primary-700">{getNursingLevelLabel(suggestedLevel)}</strong></p>
             </div>
+            {isReassessment && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-xs text-green-700">
+                  提交后，新护理计划将从明日开始生效。旧护理计划将在复评日截止，相关费用分段计算，不影响历史账单。
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -280,10 +372,11 @@ export default function Assessment() {
         >
           <ChevronLeft size={16} /> 上一步
         </button>
-        {step < 5 ? (
+        {step < steps.length - 1 ? (
           <button
             onClick={() => setStep(step + 1)}
-            className="flex items-center gap-1 px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+            disabled={!canProceed()}
+            className="flex items-center gap-1 px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             下一步 <ChevronRight size={16} />
           </button>

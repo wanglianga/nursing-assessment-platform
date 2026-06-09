@@ -49,6 +49,11 @@ export default function CarePlanTab({ carePlan }: Props) {
                   </div>
                   <p className="text-sm font-medium text-slate-700">{item.frequency}</p>
                   {item.description && <p className="text-xs text-slate-500 mt-1">{item.description}</p>}
+                  {(item.effectiveDate || item.expiryDate) && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      生效: {item.effectiveDate ? formatDate(item.effectiveDate) : ''} ~ {item.expiryDate ? formatDate(item.expiryDate) : '至今'}
+                    </p>
+                  )}
                 </div>
               )
             })}

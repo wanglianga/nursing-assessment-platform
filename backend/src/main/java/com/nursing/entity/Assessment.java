@@ -51,6 +51,11 @@ public class Assessment {
     @Column(nullable = false)
     private NursingLevel nursingLevel;
 
+    @Enumerated(EnumType.STRING)
+    private ReassessmentReason reassessmentReason;
+
+    private String reassessmentTrigger;
+
     private String assessorName;
 
     @Column(nullable = false)

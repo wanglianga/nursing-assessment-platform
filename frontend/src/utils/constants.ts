@@ -1,4 +1,4 @@
-import type { NursingLevel, CareType, RiskEventType, Severity, RiskEventStatus, BillStatus, LeaveStatus, ComplaintType, ComplaintStatus, ChangeReasonType, BillDetailCategory, ElderStatus, Gender } from '@/types'
+import type { NursingLevel, CareType, RiskEventType, Severity, RiskEventStatus, BillStatus, LeaveStatus, ComplaintType, ComplaintStatus, ChangeReasonType, BillDetailCategory, ElderStatus, Gender, ReassessmentReason } from '@/types'
 
 export const NURSING_LEVEL_LABELS: Record<NursingLevel, string> = {
   SPECIAL: '特级护理',
@@ -129,9 +129,36 @@ export const CHANGE_REASON_LABELS: Record<ChangeReasonType, string> = {
 
 export const BILL_DETAIL_CATEGORY_LABELS: Record<BillDetailCategory, string> = {
   NURSING_LEVEL: '护理等级费',
+  BASIC_SERVICE: '基础服务费',
   VALUE_ADDED: '增值服务费',
-  LEAVE_DEDUCTION: '外出扣减',
-  RISK_ADJUSTMENT: '风险调整',
+  LEAVE_DEDUCTION: '请假扣减',
+  RISK_CARE: '风险护理费',
+  MEDICAL_SUPPLY: '医嘱用品费',
+}
+
+export const BILL_DETAIL_CATEGORY_ICONS: Record<BillDetailCategory, string> = {
+  NURSING_LEVEL: '🏥',
+  BASIC_SERVICE: '📋',
+  VALUE_ADDED: '✨',
+  LEAVE_DEDUCTION: '🚪',
+  RISK_CARE: '⚠️',
+  MEDICAL_SUPPLY: '💊',
+}
+
+export const REASSESSMENT_REASON_LABELS: Record<ReassessmentReason, string> = {
+  HOSPITALIZATION_RETURN: '住院返回',
+  COGNITIVE_DECLINE: '认知下降',
+  REHABILITATION_IMPROVEMENT: '康复改善',
+  PERIODIC_REVIEW: '定期复评',
+  OTHER: '其他',
+}
+
+export const REASSESSMENT_REASON_COLORS: Record<ReassessmentReason, string> = {
+  HOSPITALIZATION_RETURN: 'bg-red-100 text-red-700',
+  COGNITIVE_DECLINE: 'bg-amber-100 text-amber-700',
+  REHABILITATION_IMPROVEMENT: 'bg-green-100 text-green-700',
+  PERIODIC_REVIEW: 'bg-blue-100 text-blue-700',
+  OTHER: 'bg-slate-100 text-slate-700',
 }
 
 export const ELDER_STATUS_LABELS: Record<ElderStatus, string> = {

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { FileText, CalendarDays, Receipt, MessageSquare, Loader2 } from 'lucide-react'
+import { FileText, CalendarDays, Receipt, MessageSquare, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import StatusBadge from '@/components/StatusBadge'
 import { formatCurrency, formatDateTime, formatDate } from '@/utils/helpers'
 import {
   CARE_TYPE_LABELS, LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS,
-  COMPLAINT_TYPE_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_COLORS
+  COMPLAINT_TYPE_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_COLORS,
+  BILL_STATUS_LABELS, BILL_STATUS_COLORS,
+  BILL_DETAIL_CATEGORY_LABELS, BILL_DETAIL_CATEGORY_ICONS
 } from '@/utils/constants'
 import { useDataStore } from '@/store/dataStore'
 import { useAuthStore } from '@/store/authStore'
-import type { ComplaintType } from '@/types'
+import type { ComplaintType, BillDetailCategory, FeeExplanation } from '@/types'
 
 const TABS = [
   { key: 'records', label: '服务记录', icon: <FileText size={18} /> },
@@ -22,7 +24,8 @@ export default function FamilyPortal() {
   const {
     elders, careRecords, leaveRequests, complaints, isLoading,
     fetchFamilyElders, fetchFamilyRecords, fetchLeaveRequests, createLeaveRequest,
-    fetchComplaints, createComplaint, fetchBillsByElder, bills
+    fetchComplaints, createComplaint, fetchBillsByElder, bills,
+    feeExplanation, fetchFeeExplanation
   } = useDataStore()
   const [activeTab, setActiveTab] = useState('records')
   const [showLeaveForm, setShowLeaveForm] = useState(false)
@@ -35,6 +38,7 @@ export default function FamilyPortal() {
   const [complaintDesc, setComplaintDesc] = useState('')
   const [complaintElderId, setComplaintElderId] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [expandedBillId, setExpandedBillId] = useState<number | null>(null)
 
   useEffect(() => {
     if (user?.id) {
@@ -167,32 +171,111 @@ export default function FamilyPortal() {
       )}
 
       {activeTab === 'billing' && (
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
-          <h3 className="text-base font-semibold text-slate-800 mb-4">本月费用预估</h3>
-          <div className="space-y-3">
-            {bills.length > 0 ? (
-              <>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">护理等级费</span>
-                  <span className="text-slate-800">{formatCurrency(bills[0].nursingLevelFee)}</span>
+        <div className="space-y-4">
+          {bills.map((bill) => (
+            <div key={bill.id} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <div
+                className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={async () => {
+                  if (expandedBillId === bill.id) {
+                    setExpandedBillId(null)
+                  } else {
+                    setExpandedBillId(bill.id)
+                    await fetchFeeExplanation(bill.id)
+                  }
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-800">{bill.period}</span>
+                    <StatusBadge label={BILL_STATUS_LABELS[bill.status]} colorClass={BILL_STATUS_COLORS[bill.status]} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary-600">{formatCurrency(bill.totalAmount)}</span>
+                    {expandedBillId === bill.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">增值服务费</span>
-                  <span className="text-slate-800">{formatCurrency(bills[0].valueAddedFee)}</span>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">护理等级</p>
+                    <p className="text-xs font-semibold text-slate-800">{formatCurrency(bill.nursingLevelFee)}</p>
+                  </div>
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">基础服务</p>
+                    <p className="text-xs font-semibold text-slate-800">{formatCurrency(bill.basicServiceFee)}</p>
+                  </div>
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">增值服务</p>
+                    <p className="text-xs font-semibold text-slate-800">{formatCurrency(bill.valueAddedFee)}</p>
+                  </div>
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">请假扣减</p>
+                    <p className="text-xs font-semibold text-red-600">-{formatCurrency(bill.leaveDeduction)}</p>
+                  </div>
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">风险护理</p>
+                    <p className="text-xs font-semibold text-slate-800">{formatCurrency(bill.riskCareFee)}</p>
+                  </div>
+                  <div className="text-center p-1.5 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">医嘱用品</p>
+                    <p className="text-xs font-semibold text-slate-800">{formatCurrency(bill.medicalSupplyFee)}</p>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">外出扣减</span>
-                  <span className="text-red-600">-{formatCurrency(bills[0].leaveDeduction)}</span>
+              </div>
+
+              {expandedBillId === bill.id && feeExplanation && feeExplanation.bill.id === bill.id && (
+                <div className="border-t border-slate-200 p-4 bg-slate-50">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3">费用解释单</h4>
+                  {(['NURSING_LEVEL', 'BASIC_SERVICE', 'VALUE_ADDED', 'LEAVE_DEDUCTION', 'RISK_CARE', 'MEDICAL_SUPPLY'] as BillDetailCategory[]).map((category) => {
+                    const items = feeExplanation.breakdown[category]
+                    if (!items || items.length === 0) return null
+                    return (
+                      <div key={category} className="mb-3 last:mb-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span>{BILL_DETAIL_CATEGORY_ICONS[category]}</span>
+                          <span className="text-xs font-semibold text-slate-700">{BILL_DETAIL_CATEGORY_LABELS[category]}</span>
+                          <span className="text-xs text-slate-400">
+                            {formatCurrency(items.reduce((s, i) => s + i.amount, 0))}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 ml-5">
+                          {items.map((item, idx) => (
+                            <div key={item.id || idx} className="bg-white rounded border border-slate-200 p-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-slate-700">{item.description}</span>
+                                <span className={`text-xs font-semibold ${category === 'LEAVE_DEDUCTION' ? 'text-red-600' : 'text-slate-800'}`}>
+                                  {category === 'LEAVE_DEDUCTION' ? '-' : ''}{formatCurrency(item.amount)}
+                                </span>
+                              </div>
+                              {(item.effectiveStartDate || item.effectiveEndDate) && (
+                                <div className="text-xs text-slate-400 mt-0.5">
+                                  生效: {item.effectiveStartDate || ''} ~ {item.effectiveEndDate || ''}
+                                </div>
+                              )}
+                              {item.serviceRecord && (
+                                <div className="mt-1 p-1.5 bg-primary-50 rounded text-xs">
+                                  <span className="text-primary-700 font-medium">关联记录: </span>
+                                  <span className="text-primary-600">
+                                    {CARE_TYPE_LABELS[item.serviceRecord.type as keyof typeof CARE_TYPE_LABELS] || item.serviceRecord.type}
+                                    {' '}| {item.serviceRecord.caregiverName}
+                                    {' '}| {new Date(item.serviceRecord.recordTime).toLocaleDateString('zh-CN')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="border-t border-slate-200 pt-3 flex justify-between">
-                  <span className="font-medium text-slate-700">合计</span>
-                  <span className="text-lg font-bold text-primary-600">{formatCurrency(bills[0].totalAmount)}</span>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无费用数据</div>
-            )}
-          </div>
+              )}
+            </div>
+          ))}
+          {bills.length === 0 && (
+            <div className="text-center py-8 text-slate-400">暂无费用数据</div>
+          )}
         </div>
       )}
 

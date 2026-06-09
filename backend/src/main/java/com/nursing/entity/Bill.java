@@ -33,13 +33,19 @@ public class Bill {
     private BigDecimal nursingLevelFee;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal basicServiceFee = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal valueAddedFee = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal leaveDeduction = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal riskAdjustment = BigDecimal.ZERO;
+    private BigDecimal riskCareFee = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal medicalSupplyFee = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;

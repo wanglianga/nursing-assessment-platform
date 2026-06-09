@@ -34,6 +34,11 @@ public class BillingController {
         return ApiResponse.success(billingService.findById(id));
     }
 
+    @GetMapping("/{id}/fee-explanation")
+    public ApiResponse<Map<String, Object>> getFeeExplanation(@PathVariable Long id) {
+        return ApiResponse.success(billingService.getFeeExplanation(id));
+    }
+
     @PostMapping("/generate/{period}")
     public ApiResponse<List<Bill>> generateBill(@PathVariable String period) {
         return ApiResponse.success(billingService.generateBill(period));

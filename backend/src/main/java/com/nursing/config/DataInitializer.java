@@ -375,24 +375,28 @@ public class DataInitializer implements CommandLineRunner {
                 case SELF_CARE -> new BigDecimal("2000");
             };
 
+            BigDecimal basicServiceFee = new BigDecimal("900");
             BigDecimal valueAdded = new BigDecimal("500");
             BigDecimal leaveDeduction = BigDecimal.ZERO;
-            BigDecimal riskAdj = BigDecimal.ZERO;
+            BigDecimal riskCareFee = BigDecimal.ZERO;
+            BigDecimal medicalSupplyFee = BigDecimal.ZERO;
 
             if (elder.getStatus() == ElderStatus.ON_LEAVE) {
                 leaveDeduction = nursingFee.divide(new BigDecimal("30"), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("3"));
             }
 
-            BigDecimal total = nursingFee.add(valueAdded).subtract(leaveDeduction).add(riskAdj);
+            BigDecimal total = nursingFee.add(basicServiceFee).add(valueAdded).subtract(leaveDeduction).add(riskCareFee).add(medicalSupplyFee);
 
             Bill bill = new Bill();
             bill.setElderId(elder.getId());
             bill.setElderName(elder.getName());
             bill.setPeriod(period);
             bill.setNursingLevelFee(nursingFee);
+            bill.setBasicServiceFee(basicServiceFee);
             bill.setValueAddedFee(valueAdded);
             bill.setLeaveDeduction(leaveDeduction);
-            bill.setRiskAdjustment(riskAdj);
+            bill.setRiskCareFee(riskCareFee);
+            bill.setMedicalSupplyFee(medicalSupplyFee);
             bill.setTotalAmount(total);
             bill.setStatus(BillStatus.DRAFT);
 
@@ -407,6 +411,16 @@ public class DataInitializer implements CommandLineRunner {
             nursingDetail.setUnitPrice(nursingFee);
             nursingDetail.setDetailDate(LocalDate.now());
             savedBill.getDetails().add(nursingDetail);
+
+            BillDetail basicDetail = new BillDetail();
+            basicDetail.setBillId(savedBill.getId());
+            basicDetail.setCategory(BillDetailCategory.BASIC_SERVICE);
+            basicDetail.setDescription("基础护理服务");
+            basicDetail.setAmount(basicServiceFee);
+            basicDetail.setQuantity(30);
+            basicDetail.setUnitPrice(new BigDecimal("30"));
+            basicDetail.setDetailDate(LocalDate.now());
+            savedBill.getDetails().add(basicDetail);
 
             BillDetail valueDetail = new BillDetail();
             valueDetail.setBillId(savedBill.getId());

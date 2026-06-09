@@ -1,5 +1,6 @@
 import { formatDate } from '@/utils/helpers'
 import { getNursingLevelLabel } from '@/utils/helpers'
+import { REASSESSMENT_REASON_LABELS, REASSESSMENT_REASON_COLORS } from '@/utils/constants'
 import type { Assessment } from '@/types'
 
 const DIMENSIONS: { key: keyof Assessment; label: string; max: number }[] = [
@@ -30,11 +31,22 @@ export default function AssessmentHistoryTab({ assessments }: Props) {
               </span>
               <span className="text-sm text-slate-500">{formatDate(assessment.assessmentDate)}</span>
               <span className="text-sm text-slate-500">评估人: {assessment.assessorName}</span>
+              {assessment.reassessmentReason && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${REASSESSMENT_REASON_COLORS[assessment.reassessmentReason]}`}>
+                  {REASSESSMENT_REASON_LABELS[assessment.reassessmentReason]}
+                </span>
+              )}
             </div>
             <span className="text-sm font-semibold text-primary-600">
               建议等级: {getNursingLevelLabel(assessment.nursingLevel)}
             </span>
           </div>
+
+          {assessment.reassessmentTrigger && (
+            <div className="mb-3 p-2 bg-amber-50 rounded-lg text-xs text-amber-700">
+              触发说明: {assessment.reassessmentTrigger}
+            </div>
+          )}
 
           <div className="grid grid-cols-5 gap-4 mb-3">
             {DIMENSIONS.map((dim) => (

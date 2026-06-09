@@ -48,7 +48,11 @@ public class AssessmentService {
         elder.setNursingLevel(level);
         elderRepository.save(elder);
 
-        triggerCarePlanUpdate(assessment.getElderId(), level);
+        if (assessment.getType() == AssessmentType.REASSESSMENT) {
+            triggerReassessmentCarePlanUpdate(assessment.getElderId(), level, assessment.getReassessmentReason());
+        } else {
+            triggerCarePlanUpdate(assessment.getElderId(), level);
+        }
 
         return saved;
     }
@@ -96,5 +100,93 @@ public class AssessmentService {
             newPlan.setStatus(CarePlanStatus.ACTIVE);
             carePlanRepository.save(newPlan);
         }
+    }
+
+    @Transactional
+    public void triggerReassessmentCarePlanUpdate(Long elderId, NursingLevel newLevel, ReassessmentReason reason) {
+        LocalDate reassessmentDate = LocalDate.now();
+
+        CarePlan activePlan = carePlanRepository.findByElderIdAndStatus(elderId, CarePlanStatus.ACTIVE)
+                .orElse(null);
+
+        if (activePlan != null) {
+            NursingLevel oldLevel = activePlan.getNursingLevel();
+            String beforeSnapshot = buildPlanSnapshot(activePlan);
+
+            activePlan.setStatus(CarePlanStatus.EXPIRED);
+            activePlan.setExpiryDate(reassessmentDate);
+            for (CarePlanItem item : activePlan.getItems()) {
+                if (item.getIsActive()) {
+                    item.setExpiryDate(reassessmentDate);
+                }
+            }
+            carePlanRepository.save(activePlan);
+
+            LocalDate newEffectiveDate = reassessmentDate.plusDays(1);
+            CarePlan newPlan = new CarePlan();
+            newPlan.setElderId(elderId);
+            newPlan.setNursingLevel(newLevel);
+            newPlan.setEffectiveDate(newEffectiveDate);
+            newPlan.setStatus(CarePlanStatus.ACTIVE);
+
+            for (CarePlanItem oldItem : activePlan.getItems()) {
+                CarePlanItem newItem = new CarePlanItem();
+                newItem.setCarePlanId(0L);
+                newItem.setType(oldItem.getType());
+                newItem.setFrequency(oldItem.getFrequency());
+                newItem.setDescription(oldItem.getDescription());
+                newItem.setIsActive(true);
+                newItem.setEffectiveDate(newEffectiveDate);
+                newPlan.getItems().add(newItem);
+            }
+
+            String reasonDesc = getReassessmentReasonDescription(reason);
+            CarePlanChange change = new CarePlanChange();
+            change.setCarePlanId(activePlan.getId());
+            change.setChangeDate(reassessmentDate);
+            change.setChangeReason("护理等级复评: " + reasonDesc);
+            change.setReasonType(ReasonType.REASSESSMENT);
+            change.setBeforeSnapshot(beforeSnapshot);
+            change.setAfterSnapshot(buildPlanSnapshot(newLevel, newEffectiveDate));
+
+            newPlan.getChanges().add(change);
+            carePlanRepository.save(newPlan);
+        } else {
+            CarePlan newPlan = new CarePlan();
+            newPlan.setElderId(elderId);
+            newPlan.setNursingLevel(newLevel);
+            newPlan.setEffectiveDate(reassessmentDate.plusDays(1));
+            newPlan.setStatus(CarePlanStatus.ACTIVE);
+            carePlanRepository.save(newPlan);
+        }
+    }
+
+    private String buildPlanSnapshot(CarePlan plan) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("等级: ").append(plan.getNursingLevel().name());
+        sb.append(", 生效: ").append(plan.getEffectiveDate());
+        sb.append(", 项目: [");
+        for (int i = 0; i < plan.getItems().size(); i++) {
+            CarePlanItem item = plan.getItems().get(i);
+            if (i > 0) sb.append("; ");
+            sb.append(item.getType().name()).append("-").append(item.getFrequency());
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String buildPlanSnapshot(NursingLevel level, LocalDate effectiveDate) {
+        return "等级: " + level.name() + ", 生效: " + effectiveDate;
+    }
+
+    private String getReassessmentReasonDescription(ReassessmentReason reason) {
+        if (reason == null) return "其他原因";
+        return switch (reason) {
+            case HOSPITALIZATION_RETURN -> "住院返回";
+            case COGNITIVE_DECLINE -> "认知下降";
+            case REHABILITATION_IMPROVEMENT -> "康复改善";
+            case PERIODIC_REVIEW -> "定期复评";
+            case OTHER -> "其他原因";
+        };
     }
 }

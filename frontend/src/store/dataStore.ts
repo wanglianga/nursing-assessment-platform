@@ -3,7 +3,7 @@ import { apiGet, apiPost, apiPut } from '@/utils/api'
 import type {
   Elder, Assessment, CarePlan, CarePlanItem, CarePlanChange, CarePlanStatus,
   CareRecord, RiskEvent, HandlingRecord, RiskEventStatus,
-  Bill, BillStatus, LeaveRequest, Complaint
+  Bill, BillStatus, LeaveRequest, Complaint, FeeExplanation
 } from '@/types'
 
 interface DataState {
@@ -24,6 +24,7 @@ interface DataState {
   currentRiskEvent: RiskEvent | null
   bills: Bill[]
   currentBill: Bill | null
+  feeExplanation: FeeExplanation | null
   leaveRequests: LeaveRequest[]
   complaints: Complaint[]
   isLoading: boolean
@@ -59,6 +60,7 @@ interface DataState {
   fetchBills: () => Promise<void>
   fetchBillsByElder: (elderId: number) => Promise<void>
   fetchBillById: (id: number) => Promise<void>
+  fetchFeeExplanation: (billId: number) => Promise<void>
   generateBills: (period: string) => Promise<void>
   updateBillStatus: (id: number, status: BillStatus) => Promise<void>
 
@@ -88,6 +90,7 @@ export const useDataStore = create<DataState>()((set) => ({
   currentRiskEvent: null,
   bills: [],
   currentBill: null,
+  feeExplanation: null,
   leaveRequests: [],
   complaints: [],
   isLoading: false,
@@ -359,6 +362,15 @@ export const useDataStore = create<DataState>()((set) => ({
       set({ currentBill: data, isLoading: false })
     } catch (err) {
       set({ isLoading: false, error: err instanceof Error ? err.message : '获取账单详情失败' })
+    }
+  },
+
+  fetchFeeExplanation: async (billId) => {
+    try {
+      const data = await apiGet<FeeExplanation>(`/bills/${billId}/fee-explanation`)
+      set({ feeExplanation: data })
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '获取费用解释单失败' })
     }
   },
 

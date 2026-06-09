@@ -37,4 +37,10 @@ public class BillDetail {
     private BigDecimal unitPrice;
 
     private LocalDate detailDate;
+
+    private Long serviceRecordId;
+
+    private LocalDate effectiveStartDate;
+
+    private LocalDate effectiveEndDate;
 }

@@ -103,7 +103,7 @@ export default function Billing() {
                   <td className="px-4 py-3 text-sm text-slate-600">{bill.period}</td>
                   <td className="px-4 py-3 text-sm text-slate-600 text-right">{formatCurrency(bill.nursingLevelFee)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600 text-right">{formatCurrency(bill.valueAddedFee)}</td>
-                  <td className="px-4 py-3 text-sm text-red-600 text-right">-{formatCurrency(bill.leaveDeduction + bill.riskAdjustment)}</td>
+                  <td className="px-4 py-3 text-sm text-red-600 text-right">-{formatCurrency(bill.leaveDeduction)}</td>
                   <td className="px-4 py-3 text-sm font-semibold text-primary-600 text-right">{formatCurrency(bill.totalAmount)}</td>
                   <td className="px-4 py-3 text-center">
                     <StatusBadge label={BILL_STATUS_LABELS[bill.status]} colorClass={BILL_STATUS_COLORS[bill.status]} />
@@ -144,16 +144,24 @@ export default function Billing() {
                   <p className="text-sm font-semibold">{formatCurrency(selectedBill.nursingLevelFee)}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-lg">
+                  <p className="text-xs text-slate-500">基础服务费</p>
+                  <p className="text-sm font-semibold">{formatCurrency(selectedBill.basicServiceFee)}</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500">增值服务费</p>
                   <p className="text-sm font-semibold">{formatCurrency(selectedBill.valueAddedFee)}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-lg">
-                  <p className="text-xs text-slate-500">外出扣减</p>
+                  <p className="text-xs text-slate-500">请假扣减</p>
                   <p className="text-sm font-semibold text-red-600">-{formatCurrency(selectedBill.leaveDeduction)}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-lg">
-                  <p className="text-xs text-slate-500">风险调整</p>
-                  <p className="text-sm font-semibold">{formatCurrency(selectedBill.riskAdjustment)}</p>
+                  <p className="text-xs text-slate-500">风险护理费</p>
+                  <p className="text-sm font-semibold">{formatCurrency(selectedBill.riskCareFee)}</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg">
+                  <p className="text-xs text-slate-500">医嘱用品费</p>
+                  <p className="text-sm font-semibold">{formatCurrency(selectedBill.medicalSupplyFee)}</p>
                 </div>
               </div>
 

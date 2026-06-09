@@ -19,7 +19,7 @@ export default function ElderDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(0)
-  const { currentElder, elderDetail, isLoading, fetchElderById } = useDataStore()
+  const { currentElder, elderDetail, isLoading, fetchElderById, feeExplanation, fetchFeeExplanation } = useDataStore()
 
   useEffect(() => {
     if (id) {
@@ -105,7 +105,7 @@ export default function ElderDetail() {
         {activeTab === 2 && <CarePlanTab carePlan={elderDetail?.carePlan ?? null} />}
         {activeTab === 3 && <CareRecordsTab records={elderDetail?.recentRecords ?? []} />}
         {activeTab === 4 && <RiskEventsTab riskEvents={elderDetail?.riskEvents ?? []} />}
-        {activeTab === 5 && <BillsTab bills={elderDetail?.bills ?? []} />}
+        {activeTab === 5 && <BillsTab bills={elderDetail?.bills ?? []} feeExplanation={feeExplanation} onFetchExplanation={fetchFeeExplanation} />}
       </div>
     </div>
   )
