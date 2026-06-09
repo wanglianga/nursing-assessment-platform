@@ -1,5 +1,5 @@
 import { formatDate } from '@/utils/helpers'
-import { CARE_TYPE_LABELS, CHANGE_REASON_LABELS } from '@/utils/constants'
+import { CARE_TYPE_LABELS, CHANGE_REASON_LABELS, CARE_TYPE_COLORS } from '@/utils/constants'
 import type { CarePlan } from '@/types'
 
 interface Props {
@@ -12,6 +12,9 @@ export default function CarePlanTab({ carePlan }: Props) {
       <div className="text-center py-8 text-slate-400">暂无护理计划</div>
     )
   }
+
+  const items = carePlan.items ?? []
+  const changeHistory = carePlan.changeHistory ?? []
 
   return (
     <div className="space-y-6">
@@ -29,42 +32,59 @@ export default function CarePlanTab({ carePlan }: Props) {
         </div>
 
         <h4 className="text-sm font-semibold text-slate-800 mb-3">护理项目</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {carePlan.items.map((item) => (
-            <div key={item.id} className={`p-4 rounded-lg border ${item.isActive ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50 opacity-60'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">
-                  {CARE_TYPE_LABELS[item.type]}
-                </span>
-                <span className={`text-xs ${item.isActive ? 'text-green-600' : 'text-slate-400'}`}>
-                  {item.isActive ? '启用' : '停用'}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-slate-700">{item.frequency}</p>
-              {item.description && <p className="text-xs text-slate-500 mt-1">{item.description}</p>}
-            </div>
-          ))}
-        </div>
+        {items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {items.map((item) => {
+              const label = CARE_TYPE_LABELS[item.type] || item.type
+              const colorClass = CARE_TYPE_COLORS[item.type] || 'bg-slate-100 text-slate-700'
+              return (
+                <div key={item.id} className={`p-4 rounded-lg border ${item.isActive ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50 opacity-60'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colorClass}`}>
+                      {label}
+                    </span>
+                    <span className={`text-xs ${item.isActive ? 'text-green-600' : 'text-slate-400'}`}>
+                      {item.isActive ? '启用' : '停用'}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-700">{item.frequency}</p>
+                  {item.description && <p className="text-xs text-slate-500 mt-1">{item.description}</p>}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-slate-400 text-sm">暂无护理项目</div>
+        )}
       </div>
 
-      {carePlan.changeHistory.length > 0 && (
+      {changeHistory.length > 0 && (
         <div className="bg-white rounded-lg border border-slate-200 p-5">
           <h4 className="text-sm font-semibold text-slate-800 mb-4">变更历史</h4>
           <div className="space-y-3">
-            {carePlan.changeHistory.map((change) => (
-              <div key={change.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className="w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                      {CHANGE_REASON_LABELS[change.reasonType]}
-                    </span>
-                    <span className="text-xs text-slate-400">{formatDate(change.changeDate)}</span>
+            {changeHistory.map((change) => {
+              const reasonLabel = CHANGE_REASON_LABELS[change.reasonType] || change.reasonType
+              return (
+                <div key={change.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className="w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                        {reasonLabel}
+                      </span>
+                      <span className="text-xs text-slate-400">{formatDate(change.changeDate)}</span>
+                    </div>
+                    <p className="text-sm text-slate-600 mt-1">{change.changeReason}</p>
+                    {change.beforeSnapshot && change.afterSnapshot && (
+                      <div className="mt-2 text-xs text-slate-400 space-y-1">
+                        <p>变更前: {change.beforeSnapshot}</p>
+                        <p>变更后: {change.afterSnapshot}</p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-slate-600 mt-1">{change.changeReason}</p>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

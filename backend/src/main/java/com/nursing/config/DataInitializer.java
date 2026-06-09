@@ -162,6 +162,18 @@ public class DataInitializer implements CommandLineRunner {
                 item.setCarePlanId(savedPlan.getId());
             }
             savedPlan.setItems(items);
+
+            if (elder.getId() <= 2L) {
+                CarePlanChange change = new CarePlanChange();
+                change.setCarePlanId(savedPlan.getId());
+                change.setChangeDate(LocalDate.now().minusMonths(3));
+                change.setChangeReason("入院评估后调整护理项目");
+                change.setReasonType(ReasonType.ASSESSMENT);
+                change.setBeforeSnapshot("初始护理计划");
+                change.setAfterSnapshot("根据评估结果增加翻身频次");
+                savedPlan.getChanges().add(change);
+            }
+
             carePlanRepository.save(savedPlan);
         }
     }
@@ -251,6 +263,38 @@ public class DataInitializer implements CommandLineRunner {
                 bathing.setDescription("完成擦浴");
                 bathing.setNotes("无异常");
                 careRecordRepository.save(bathing);
+
+                CareRecord rehab = new CareRecord();
+                rehab.setElderId(elder.getId());
+                rehab.setCaregiverId(3L);
+                rehab.setCaregiverName("王护理");
+                rehab.setType(CareItemType.REHABILITATION);
+                rehab.setRecordTime(date.atTime(10, 0));
+                rehab.setDescription("完成康复训练");
+                rehab.setNotes("配合良好");
+                careRecordRepository.save(rehab);
+
+                CareRecord nightPatrol = new CareRecord();
+                nightPatrol.setElderId(elder.getId());
+                nightPatrol.setCaregiverId(3L);
+                nightPatrol.setCaregiverName("王护理");
+                nightPatrol.setType(CareItemType.NIGHT_PATROL);
+                nightPatrol.setRecordTime(date.atTime(22, 0));
+                nightPatrol.setDescription("夜间巡视");
+                nightPatrol.setNotes("睡眠安稳");
+                careRecordRepository.save(nightPatrol);
+
+                if (day == 0 && elder.getId() <= 2L) {
+                    CareRecord abnormal = new CareRecord();
+                    abnormal.setElderId(elder.getId());
+                    abnormal.setCaregiverId(3L);
+                    abnormal.setCaregiverName("王护理");
+                    abnormal.setType(CareItemType.OTHER);
+                    abnormal.setRecordTime(date.atTime(16, 30));
+                    abnormal.setDescription("老人情绪波动，已安抚并通知家属");
+                    abnormal.setNotes("需持续关注");
+                    careRecordRepository.save(abnormal);
+                }
             }
         }
     }

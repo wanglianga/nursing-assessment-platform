@@ -114,9 +114,18 @@ export const useDataStore = create<DataState>()((set) => ({
         riskEvents: RiskEvent[]
         bills: Bill[]
       }>(`/elders/${id}`)
+      let carePlan = data.carePlan
+      const rawPlan = carePlan as unknown as Record<string, unknown>
+      if (carePlan && rawPlan.changes && !carePlan.changeHistory) {
+        carePlan = { ...carePlan, changeHistory: rawPlan.changes as CarePlanChange[] }
+      }
+      if (carePlan) {
+        carePlan.changeHistory = carePlan.changeHistory ?? []
+        carePlan.items = carePlan.items ?? []
+      }
       set({
         currentElder: data.elder,
-        elderDetail: data,
+        elderDetail: { ...data, carePlan },
         isLoading: false
       })
     } catch (err) {
@@ -179,7 +188,16 @@ export const useDataStore = create<DataState>()((set) => ({
     set({ isLoading: true })
     try {
       const data = await apiGet<CarePlan>(`/care-plans/elder/${elderId}`)
-      set({ carePlan: data, isLoading: false })
+      let plan = data
+      const rawPlan = plan as unknown as Record<string, unknown>
+      if (plan && rawPlan.changes && !plan.changeHistory) {
+        plan = { ...plan, changeHistory: rawPlan.changes as CarePlanChange[] }
+      }
+      if (plan) {
+        plan.changeHistory = plan.changeHistory ?? []
+        plan.items = plan.items ?? []
+      }
+      set({ carePlan: plan, isLoading: false })
     } catch (err) {
       set({ isLoading: false, error: err instanceof Error ? err.message : '获取护理计划失败' })
     }

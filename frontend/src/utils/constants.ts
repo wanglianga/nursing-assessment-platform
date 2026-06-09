@@ -30,6 +30,7 @@ export const CARE_TYPE_LABELS: Record<CareType, string> = {
   BATHING: '洗浴',
   REHABILITATION: '康复训练',
   NIGHT_PATROL: '夜间巡视',
+  OTHER: '异常事件',
 }
 
 export const CARE_TYPE_COLORS: Record<CareType, string> = {
@@ -38,6 +39,7 @@ export const CARE_TYPE_COLORS: Record<CareType, string> = {
   BATHING: 'bg-blue-100 text-blue-700',
   REHABILITATION: 'bg-orange-100 text-orange-700',
   NIGHT_PATROL: 'bg-indigo-100 text-indigo-700',
+  OTHER: 'bg-red-100 text-red-700',
 }
 
 export const RISK_EVENT_TYPE_LABELS: Record<RiskEventType, string> = {
