@@ -56,6 +56,10 @@ interface DataState {
   createRiskEvent: (event: Partial<RiskEvent>) => Promise<void>
   addHandlingRecord: (eventId: number, record: Partial<HandlingRecord>) => Promise<void>
   updateRiskEventStatus: (id: number, status: RiskEventStatus) => Promise<void>
+  notifyFamily: (id: number) => Promise<void>
+  notifyDoctor: (id: number) => Promise<void>
+  updateFallDetails: (id: number, data: Partial<RiskEvent>) => Promise<void>
+  submitReview: (id: number, data: Partial<RiskEvent> & { planAdjustment?: boolean; billingImpact?: boolean }) => Promise<void>
 
   fetchBills: () => Promise<void>
   fetchBillsByElder: (elderId: number) => Promise<void>
@@ -71,6 +75,9 @@ interface DataState {
   createLeaveRequest: (familyId: number, request: Partial<LeaveRequest>) => Promise<void>
   approveLeaveRequest: (id: number) => Promise<void>
   rejectLeaveRequest: (id: number) => Promise<void>
+  recordPickup: (id: number, data: Partial<LeaveRequest>) => Promise<void>
+  recordReturn: (id: number, actualReturnTime?: string) => Promise<void>
+  confirmHealthOnReturn: (id: number, status: string, notes?: string) => Promise<void>
 
   fetchComplaints: (familyId: number) => Promise<void>
   createComplaint: (familyId: number, complaint: Partial<Complaint>) => Promise<void>
@@ -335,6 +342,42 @@ export const useDataStore = create<DataState>()((set) => ({
     }
   },
 
+  notifyFamily: async (id) => {
+    try {
+      await apiPost<RiskEvent>(`/risk-events/${id}/notify-family`, {})
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '通知家属失败' })
+      throw err
+    }
+  },
+
+  notifyDoctor: async (id) => {
+    try {
+      await apiPost<RiskEvent>(`/risk-events/${id}/notify-doctor`, {})
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '通知医生失败' })
+      throw err
+    }
+  },
+
+  updateFallDetails: async (id, data) => {
+    try {
+      await apiPut<RiskEvent>(`/risk-events/${id}/fall-details`, data)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '更新跌倒详情失败' })
+      throw err
+    }
+  },
+
+  submitReview: async (id, data) => {
+    try {
+      await apiPost<RiskEvent>(`/risk-events/${id}/review`, data)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '提交复盘结论失败' })
+      throw err
+    }
+  },
+
   fetchBills: async () => {
     set({ isLoading: true })
     try {
@@ -447,6 +490,33 @@ export const useDataStore = create<DataState>()((set) => ({
       await apiPut<LeaveRequest>(`/family/leave-requests/${id}/reject`, {})
     } catch (err) {
       set({ error: err instanceof Error ? err.message : '拒绝失败' })
+      throw err
+    }
+  },
+
+  recordPickup: async (id, data) => {
+    try {
+      await apiPut<LeaveRequest>(`/family/leave-requests/${id}/pickup`, data)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '记录接回信息失败' })
+      throw err
+    }
+  },
+
+  recordReturn: async (id, actualReturnTime) => {
+    try {
+      await apiPut<LeaveRequest>(`/family/leave-requests/${id}/return`, actualReturnTime ? { actualReturnTime } : {})
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '记录返院失败' })
+      throw err
+    }
+  },
+
+  confirmHealthOnReturn: async (id, status, notes) => {
+    try {
+      await apiPut<LeaveRequest>(`/family/leave-requests/${id}/health-confirm`, { status, notes })
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : '健康确认失败' })
       throw err
     }
   },

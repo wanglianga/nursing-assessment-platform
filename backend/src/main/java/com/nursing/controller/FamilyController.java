@@ -1,13 +1,12 @@
 package com.nursing.controller;
 
 import com.nursing.dto.ApiResponse;
-import com.nursing.entity.CareRecord;
-import com.nursing.entity.Complaint;
-import com.nursing.entity.Elder;
-import com.nursing.entity.LeaveRequest;
+import com.nursing.entity.*;
 import com.nursing.service.FamilyService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +15,7 @@ import java.util.Map;
 public class FamilyController {
 
     private final FamilyService familyService;
+    private static final DateTimeFormatter DTF = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public FamilyController(FamilyService familyService) {
         this.familyService = familyService;
@@ -49,6 +49,36 @@ public class FamilyController {
     @PutMapping("/leave-requests/{id}/reject")
     public ApiResponse<LeaveRequest> rejectLeaveRequest(@PathVariable Long id) {
         return ApiResponse.success(familyService.rejectLeaveRequest(id));
+    }
+
+    @PutMapping("/leave-requests/{id}/pickup")
+    public ApiResponse<LeaveRequest> recordPickup(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String pickupTimeStr = (String) body.get("pickupTime");
+        LocalDateTime pickupTime = pickupTimeStr != null ? LocalDateTime.parse(pickupTimeStr, DTF) : null;
+        String medicationHandover = (String) body.get("medicationHandover");
+        Boolean riskAcknowledged = body.get("riskAcknowledged") != null ? (Boolean) body.get("riskAcknowledged") : null;
+        String expectedReturnTimeStr = (String) body.get("expectedReturnTime");
+        LocalDateTime expectedReturnTime = expectedReturnTimeStr != null ? LocalDateTime.parse(expectedReturnTimeStr, DTF) : null;
+        return ApiResponse.success(familyService.recordPickup(id, pickupTime, medicationHandover,
+                riskAcknowledged, expectedReturnTime));
+    }
+
+    @PutMapping("/leave-requests/{id}/return")
+    public ApiResponse<LeaveRequest> recordReturn(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
+        LocalDateTime actualReturnTime = null;
+        if (body != null) {
+            String returnTimeStr = (String) body.get("actualReturnTime");
+            actualReturnTime = returnTimeStr != null ? LocalDateTime.parse(returnTimeStr, DTF) : null;
+        }
+        return ApiResponse.success(familyService.recordReturn(id, actualReturnTime));
+    }
+
+    @PutMapping("/leave-requests/{id}/health-confirm")
+    public ApiResponse<LeaveRequest> confirmHealthOnReturn(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String statusStr = (String) body.get("status");
+        HealthReconfirmStatus status = statusStr != null ? HealthReconfirmStatus.valueOf(statusStr) : HealthReconfirmStatus.PENDING;
+        String notes = (String) body.get("notes");
+        return ApiResponse.success(familyService.confirmHealthOnReturn(id, status, notes));
     }
 
     @GetMapping("/{familyMemberId}/complaints")

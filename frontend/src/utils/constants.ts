@@ -1,4 +1,4 @@
-import type { NursingLevel, CareType, RiskEventType, Severity, RiskEventStatus, BillStatus, LeaveStatus, ComplaintType, ComplaintStatus, ChangeReasonType, BillDetailCategory, ElderStatus, Gender, ReassessmentReason } from '@/types'
+import type { NursingLevel, CareType, RiskEventType, Severity, RiskEventStatus, BillStatus, LeaveStatus, ComplaintType, ComplaintStatus, ChangeReasonType, BillDetailCategory, ElderStatus, Gender, ReassessmentReason, CompanionStatus, HospitalResult, HealthReconfirmStatus } from '@/types'
 
 export const NURSING_LEVEL_LABELS: Record<NursingLevel, string> = {
   SPECIAL: '特级护理',
@@ -92,12 +92,46 @@ export const LEAVE_STATUS_LABELS: Record<LeaveStatus, string> = {
   PENDING: '待审批',
   APPROVED: '已批准',
   REJECTED: '已拒绝',
+  ON_LEAVE: '请假外出中',
+  RETURNED: '已返院',
+  COMPLETED: '已完成',
 }
 
 export const LEAVE_STATUS_COLORS: Record<LeaveStatus, string> = {
   PENDING: 'bg-yellow-100 text-yellow-700',
   APPROVED: 'bg-green-100 text-green-700',
   REJECTED: 'bg-red-100 text-red-700',
+  ON_LEAVE: 'bg-blue-100 text-blue-700',
+  RETURNED: 'bg-purple-100 text-purple-700',
+  COMPLETED: 'bg-slate-100 text-slate-700',
+}
+
+export const COMPANION_STATUS_LABELS: Record<CompanionStatus, string> = {
+  ACCOMPANIED: '有人陪护',
+  UNACCOMPANIED: '无人陪护',
+  TEMPORARILY_UNATTENDED: '临时无人照看',
+}
+
+export const HOSPITAL_RESULT_LABELS: Record<HospitalResult, string> = {
+  NOT_REQUIRED: '无需送医',
+  OBSERVATION: '留院观察',
+  TREATMENT: '门诊治疗',
+  HOSPITALIZED: '住院治疗',
+  RETURNED: '已返院',
+}
+
+export const HEALTH_RECONFIRM_STATUS_LABELS: Record<HealthReconfirmStatus, string> = {
+  PENDING: '待确认',
+  CONFIRMED_NORMAL: '健康正常',
+  CONFIRMED_ABNORMAL: '健康异常',
+  REQUIRES_ASSESSMENT: '需要重新评估',
+}
+
+export const HEALTH_RECONFIRM_STATUS_COLORS: Record<HealthReconfirmStatus, string> = {
+  PENDING: 'bg-yellow-100 text-yellow-700',
+  CONFIRMED_NORMAL: 'bg-green-100 text-green-700',
+  CONFIRMED_ABNORMAL: 'bg-red-100 text-red-700',
+  REQUIRES_ASSESSMENT: 'bg-orange-100 text-orange-700',
 }
 
 export const COMPLAINT_TYPE_LABELS: Record<ComplaintType, string> = {

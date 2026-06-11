@@ -45,6 +45,31 @@ public class LeaveRequest {
 
     private Integer leaveDays;
 
+    private LocalDateTime pickupTime;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String medicationHandover;
+
+    private Boolean riskAcknowledged = false;
+
+    private LocalDateTime riskAcknowledgedTime;
+
+    private LocalDateTime expectedReturnTime;
+
+    private LocalDateTime actualReturnTime;
+
+    @Enumerated(EnumType.STRING)
+    private HealthReconfirmStatus healthReconfirmStatus;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String healthReconfirmNotes;
+
+    private LocalDateTime healthReconfirmTime;
+
+    private Boolean billingSuspended = false;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

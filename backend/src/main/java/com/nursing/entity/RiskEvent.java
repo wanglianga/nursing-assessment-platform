@@ -50,6 +50,34 @@ public class RiskEvent {
     @Column(nullable = false)
     private Boolean billingImpact = false;
 
+    private String location;
+
+    @Enumerated(EnumType.STRING)
+    private CompanionStatus companionStatus;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String injuryPhotos;
+
+    @Enumerated(EnumType.STRING)
+    private HospitalResult hospitalResult;
+
+    private String hospitalNotes;
+
+    private Boolean familyNotified = false;
+
+    private LocalDateTime familyNotifiedTime;
+
+    private Boolean doctorNotified = false;
+
+    private LocalDateTime doctorNotifiedTime;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String reviewConclusion;
+
+    private String patrolFrequencyAdjustment;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

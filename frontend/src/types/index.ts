@@ -9,12 +9,15 @@ export type RiskEventType = 'FALL' | 'PRESSURE_SORE' | 'WANDERING' | 'FAMILY_PIC
 export type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 export type RiskEventStatus = 'REPORTED' | 'PROCESSING' | 'RESOLVED'
 export type BillStatus = 'DRAFT' | 'CONFIRMED' | 'PAID'
-export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ON_LEAVE' | 'RETURNED' | 'COMPLETED'
 export type ComplaintType = 'SERVICE_QUALITY' | 'FEE_DISPUTE' | 'CARE_ISSUE' | 'OTHER'
 export type ComplaintStatus = 'SUBMITTED' | 'PROCESSING' | 'RESOLVED'
 export type ChangeReasonType = 'ASSESSMENT' | 'RISK_EVENT' | 'REASSESSMENT' | 'FAMILY_LEAVE' | 'OTHER'
 export type BillDetailCategory = 'NURSING_LEVEL' | 'BASIC_SERVICE' | 'VALUE_ADDED' | 'LEAVE_DEDUCTION' | 'RISK_CARE' | 'MEDICAL_SUPPLY'
 export type Gender = 'MALE' | 'FEMALE'
+export type CompanionStatus = 'ACCOMPANIED' | 'UNACCOMPANIED' | 'TEMPORARILY_UNATTENDED'
+export type HospitalResult = 'NOT_REQUIRED' | 'OBSERVATION' | 'TREATMENT' | 'HOSPITALIZED' | 'RETURNED'
+export type HealthReconfirmStatus = 'PENDING' | 'CONFIRMED_NORMAL' | 'CONFIRMED_ABNORMAL' | 'REQUIRES_ASSESSMENT'
 
 export interface User { id: number; username: string; role: UserRole; name: string; phone?: string }
 export interface LoginRequest { username: string; password: string }
@@ -62,6 +65,12 @@ export interface RiskEvent {
   severity: Severity; eventTime: string; discoverer?: string
   description: string; status: RiskEventStatus; planAdjustment: boolean
   billingImpact: boolean; handlingRecords?: HandlingRecord[]
+  location?: string; companionStatus?: CompanionStatus
+  injuryPhotos?: string; hospitalResult?: HospitalResult
+  hospitalNotes?: string; familyNotified?: boolean
+  familyNotifiedTime?: string; doctorNotified?: boolean
+  doctorNotifiedTime?: string; reviewConclusion?: string
+  patrolFrequencyAdjustment?: string
 }
 
 export interface HandlingRecord {
@@ -99,7 +108,12 @@ export interface LeaveRequest {
   id: number; elderId: number; elderName?: string; familyMemberId: number
   familyMemberName?: string; startDate: string; endDate: string
   reason?: string; status: LeaveStatus; approvedBy?: string
-  leaveDays: number
+  leaveDays: number; pickupTime?: string; medicationHandover?: string
+  riskAcknowledged?: boolean; riskAcknowledgedTime?: string
+  expectedReturnTime?: string; actualReturnTime?: string
+  healthReconfirmStatus?: HealthReconfirmStatus
+  healthReconfirmNotes?: string; healthReconfirmTime?: string
+  billingSuspended?: boolean
 }
 
 export interface Complaint {
